@@ -17,6 +17,7 @@ public class AppController {
     @GetMapping("/save")
     public ResponseEntity<String> getFile() throws Exception {
 //        service.csvToByteArrayConverter();
+
         service.getFileEncrypted();
         return new ResponseEntity<>("Done", HttpStatus.ACCEPTED);
     }

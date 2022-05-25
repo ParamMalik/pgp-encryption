@@ -1,6 +1,5 @@
 package com.csvreader.csvtodatabase.encryptor;
 
-import lombok.RequiredArgsConstructor;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
@@ -16,30 +15,32 @@ import java.util.Date;
 import java.util.Iterator;
 
 @Component
-@RequiredArgsConstructor
 public class PgpEncryptor {
+
     public void encryption(byte[] dataToEncrypt, String publicKeyFilePath) throws Exception {
 
         Security.addProvider(new BouncyCastleProvider());
 
         // Load Public Key File
-        FileInputStream keysFile = new FileInputStream(publicKeyFilePath);
-        PGPPublicKey pubKey = readPublicKey(keysFile);
+        var keysFile = new FileInputStream(publicKeyFilePath);
 
+        // Reading Public key
+        var pubKey = readPublicKey(keysFile);
+
+        // Encrypting the data
         encryptFile(pubKey, dataToEncrypt);
-
 
     }
 
-    private PGPPublicKey readPublicKey(InputStream paramInputStream) throws IOException, PGPException {
-        PGPPublicKeyRingCollection localPGPPublicKeyRingCollection = new PGPPublicKeyRingCollection(
-                PGPUtil.getDecoderStream(paramInputStream));
-        Iterator keyRing = localPGPPublicKeyRingCollection.getKeyRings();
+    private PGPPublicKey readPublicKey(InputStream publicKeyInputFile) throws IOException, PGPException {
+        var localPGPPublicKeyRingCollection = new PGPPublicKeyRingCollection(
+                PGPUtil.getDecoderStream(publicKeyInputFile));
+        var keyRing = localPGPPublicKeyRingCollection.getKeyRings();
         while (keyRing.hasNext()) {
             PGPPublicKeyRing localPGPPublicKeyRing = (PGPPublicKeyRing) keyRing.next();
-            Iterator publicKey = localPGPPublicKeyRing.getPublicKeys();
+            var publicKey = localPGPPublicKeyRing.getPublicKeys();
             while (publicKey.hasNext()) {
-                PGPPublicKey localPGPPublicKey = (PGPPublicKey) publicKey.next();
+                var localPGPPublicKey = (PGPPublicKey) publicKey.next();
                 if (localPGPPublicKey.isEncryptionKey())
                     return localPGPPublicKey;
             }
@@ -50,7 +51,7 @@ public class PgpEncryptor {
     private void encryptFile(PGPPublicKey encryptionPGPPublicKey, byte[] bytesToEncrypt)
             throws IOException, NoSuchProviderException {
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        var byteArrayOutputStream = new ByteArrayOutputStream();
 
         OutputStream outputStream = byteArrayOutputStream;
 
@@ -59,21 +60,21 @@ public class PgpEncryptor {
         outputStream = new ArmoredOutputStream(outputStream);
         try {
 
-            byte[] arrayOfByte = compress(bytesToEncrypt);
+            var arrayOfByte = compress(bytesToEncrypt);
 
 
-            PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(SymmetricKeyAlgorithmTags.AES_256, integrityCheck, new SecureRandom(), "BC");
+            var encryptedDataGenerator = new PGPEncryptedDataGenerator(SymmetricKeyAlgorithmTags.AES_256, integrityCheck, new SecureRandom(), "BC");
             encryptedDataGenerator.addMethod(encryptionPGPPublicKey);
 
-            OutputStream openStream = encryptedDataGenerator.open(outputStream, arrayOfByte.length);
+            var openStream = encryptedDataGenerator.open(outputStream, arrayOfByte.length);
             openStream.write(arrayOfByte);
 
             openStream.close();
             outputStream.close();
 
-            String s = byteArrayOutputStream.toString();
+            var encryptedDataAsString = byteArrayOutputStream.toString();
 
-            System.out.println(s);
+            System.out.println(encryptedDataAsString);
 
         } catch (PGPException localPGPException) {
             System.err.println("Local PGP Error occurred");
@@ -85,19 +86,16 @@ public class PgpEncryptor {
 
     // Compressing
     private static byte[] compress(byte[] byteDataToEncrypt) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        PGPCompressedDataGenerator compressedData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
-
-        OutputStream compressedOutputStream = compressedData.open(byteArrayOutputStream); // open it with the final destination
-
-        PGPLiteralDataGenerator localPGPCompressedDataGenerator = new PGPLiteralDataGenerator();
-
-        OutputStream outputStream = localPGPCompressedDataGenerator.open(compressedOutputStream, // the compressed output stream
+        var byteArrayOutputStream = new ByteArrayOutputStream();
+        var compressedData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+        var compressedOutputStream = compressedData.open(byteArrayOutputStream);
+        var localPGPCompressedDataGenerator = new PGPLiteralDataGenerator();
+        var outputStream = localPGPCompressedDataGenerator.open(compressedOutputStream, // the compressed output stream
                 PGPLiteralData.BINARY,
-                "",  // "filename" to store
-                byteDataToEncrypt.length, // length of clear data
-                new Date()  // current time
+                "",
+                byteDataToEncrypt.length,
+                new Date()
         );
 
         outputStream.write(byteDataToEncrypt);

@@ -4,17 +4,13 @@ import com.csvreader.csvtodatabase.encryptor.PgpEncryptor;
 import com.csvreader.csvtodatabase.model.BookModel;
 import com.csvreader.csvtodatabase.repository.BookRepository;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.FileReader;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,32 +30,30 @@ public class BookService {
     //    To Encrypt Stream Data received From mongodb
     public void getFileEncrypted() throws Exception {
 
-        CsvMapper csvMapper = new CsvMapper();
-        CsvSchema columns = csvMapper.schemaFor(BookModel.class).withUseHeader(true);
-        List<BookModel> bookList = bookRepository.findAll();
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(csvMapper.writer(columns).writeValueAsBytes(bookList));
+        var csvMapper = new CsvMapper();
+        var columns = csvMapper.schemaFor(BookModel.class).withUseHeader(true);
+        var bookList = bookRepository.findAll();
+        var byteArrayInputStream = new ByteArrayInputStream(csvMapper.writer(columns).writeValueAsBytes(bookList));
 
-        int availableSize = byteArrayInputStream.available();
+        // Getting Values of byteArrayInputStream in byte Array
+        var bytesToEncrypt = byteArrayInputStream.readAllBytes();
 
-        byte[] bytes = new byte[availableSize];
-        byteArrayInputStream.read(bytes);
+        encryptor.encryption(bytesToEncrypt, PUBLIC_KEY_FILE);
 
-
-        encryptor.encryption(bytes, PUBLIC_KEY_FILE);
         System.out.println("File Encrypted successfully");
     }
 
     // To Store CSV data to mongodb
     public void csvToByteArrayConverter() {
 
-        CsvSchema bookModelSchema = CsvSchema.emptySchema().withHeader();
+        var bookModelSchema = CsvSchema.emptySchema().withHeader();
 
-        CsvMapper csvMapper = new CsvMapper();
-        ObjectReader objectReader = csvMapper.readerFor(BookModel.class).with(bookModelSchema);
+        var csvMapper = new CsvMapper();
+        var objectReader = csvMapper.readerFor(BookModel.class).with(bookModelSchema);
 
-        try (FileReader fileReader = new FileReader(FILEPATH)) {
+        try (var fileReader = new FileReader(FILEPATH)) {
             MappingIterator<BookModel> iterator = objectReader.readValues(fileReader);
-            List<BookModel> bookModels = iterator.readAll();
+            var bookModels = iterator.readAll();
             bookRepository.saveAll(bookModels);
 
         } catch (Exception exception) {
