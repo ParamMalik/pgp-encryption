@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -20,11 +21,8 @@ public class BookService {
     private final PgpEncryptor encryptor;
 
     // path of csv file
-    private static final String FILEPATH = "src/main/resources/byteDataFromCsvFile.csv";
-
-    // public key for testing
-    private static final String PUBLIC_KEY_FILE = "src/main/resources/PublicKey.asc";
-//    private static final String PUBLIC_KEY_FILE = "src/main/resources/ClientKey.asc";
+    @Value("${csv.file-path}")
+    private String FILEPATH;
 
 
     //    To Encrypt Stream Data received From mongodb
@@ -38,7 +36,7 @@ public class BookService {
         // Getting Values of byteArrayInputStream in byte Array
         var bytesToEncrypt = byteArrayInputStream.readAllBytes();
 
-        encryptor.encryption(bytesToEncrypt, PUBLIC_KEY_FILE);
+        var encryptedByteArrayOutputStream = encryptor.encryption(bytesToEncrypt);
 
         System.out.println("File Encrypted successfully");
     }
