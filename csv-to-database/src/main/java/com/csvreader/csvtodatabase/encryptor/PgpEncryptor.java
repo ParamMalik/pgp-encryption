@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Date;
@@ -19,8 +18,8 @@ import java.util.Date;
 @Component
 public class PgpEncryptor {
 
-    // public key for testing
-    @Value("${pgp.public-key-file}")
+    // public key path
+    @Value("${pgp.public-key-path}")
     private String PUBLIC_KEY_FILE;
 
 
@@ -55,23 +54,22 @@ public class PgpEncryptor {
         throw new IllegalArgumentException("Can't find encryption key in key ring.");
     }
 
-    private ByteArrayInputStream encryptFile(PGPPublicKey encryptionPGPPublicKey, byte[] bytesToEncrypt)
-            throws IOException, NoSuchProviderException {
+    private ByteArrayInputStream encryptFile(PGPPublicKey encryptionPGPPublicKey, byte[] bytesToEncrypt) throws IOException {
 
         var byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStream outputStream = byteArrayOutputStream;
         OutputStream openStream = null;
 
         outputStream = new ArmoredOutputStream(outputStream);
-        var arrayOfByte = compress(bytesToEncrypt);
-        var encryptedDataGenerator = new PGPEncryptedDataGenerator(SymmetricKeyAlgorithmTags.AES_256, true, new SecureRandom(), "BC");
 
         try {
+            var arrayOfByte = compress(bytesToEncrypt);
+            var encryptedDataGenerator = new PGPEncryptedDataGenerator(SymmetricKeyAlgorithmTags.AES_256, true, new SecureRandom(), "BC");
             encryptedDataGenerator.addMethod(encryptionPGPPublicKey);
             openStream = encryptedDataGenerator.open(outputStream, arrayOfByte.length);
             openStream.write(arrayOfByte);
 
-        } catch (PGPException localPGPException) {
+        } catch (Exception localPGPException) {
             log.error("PGP Error occurred:{}",localPGPException.getMessage());
             return null;
 
