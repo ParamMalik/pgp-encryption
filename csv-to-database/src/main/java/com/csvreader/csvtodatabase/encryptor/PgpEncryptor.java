@@ -2,7 +2,6 @@ package com.csvreader.csvtodatabase.encryptor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
-import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
@@ -93,7 +92,7 @@ public class PgpEncryptor {
     private static byte[] compress(byte[] byteDataToEncrypt) {
 
         var byteArrayOutputStream = new ByteArrayOutputStream();
-        var compressedData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+        var compressedData = new PGPCompressedDataGenerator(1);
         OutputStream outputStream = null;
         try {
             var compressedOutputStream = compressedData.open(byteArrayOutputStream);
