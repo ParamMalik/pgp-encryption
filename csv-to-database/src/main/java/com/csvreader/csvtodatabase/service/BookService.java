@@ -39,10 +39,7 @@ public class BookService {
         // Getting Values of byteArrayInputStream in byte Array
         var bytesToEncrypt = byteArrayInputStream.readAllBytes();
 
-//        String s = new String(bytesToEncrypt);
-//        String stringToProcess = s.replaceAll("\"", "");
-
-        var encryptedByteArrayOutputStream = encryptor.encryption(bytesToEncrypt);
+        var encryptedByteArrayInputStream = encryptor.encryption(bytesToEncrypt);
 
         System.out.println("File Encrypted successfully");
     }
